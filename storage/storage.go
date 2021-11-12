@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	Filename   = "scan.xlsx"
 	PKSheet    = "table_pk"
 	CountSheet = "table_full_count"
 	DiffSheet  = "table_diff_count"

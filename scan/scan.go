@@ -116,9 +116,9 @@ func (s *Scan) GetDiff(pkScan bool) error {
 	return nil
 }
 
-func LoadAndScan(ms mysql.MySql, pkScan bool) ([]Scan, error) {
+func LoadAndScan(ms mysql.MySql, saveFile string, pkScan bool) ([]Scan, error) {
 	var scans []Scan
-	_, results, err := storage.ReadFromExcel(storage.Filename, storage.CountSheet)
+	_, results, err := storage.ReadFromExcel(saveFile, storage.CountSheet)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func LoadAndScan(ms mysql.MySql, pkScan bool) ([]Scan, error) {
 	return scans, nil
 }
 
-func SaveFull(srcScan, tgtScan []Scan) error {
+func SaveFull(srcScan, tgtScan []Scan, saveFile string) error {
 	var data [][]string
 	columns := []string{"database", "table", "pk_column", "pk_type", "min", "max", "src_count", "src_duration", "tgt_count", "tgt_duration", "equal"}
 	for i := 0; i < len(srcScan); i++ {
@@ -160,10 +160,10 @@ func SaveFull(srcScan, tgtScan []Scan) error {
 			[]string{s.Database, s.Table, s.PKColumn, s.PKType, s.Min, s.Max, s.Count, s.Duration, t.Count, t.Duration, equal},
 		)
 	}
-	return storage.WriteToExcel(storage.Filename, storage.CountSheet, columns, data)
+	return storage.WriteToExcel(saveFile, storage.CountSheet, columns, data)
 }
 
-func SaveDiff(srcScan, tgtScan []Scan) error {
+func SaveDiff(srcScan, tgtScan []Scan, saveFile string) error {
 	var data [][]string
 	columns := []string{"database", "table", "pk_column", "pk_type", "max", "src_count", "src_duration", "tgt_count", "tgt_duration", "equal"}
 	for i := 0; i < len(srcScan); i++ {
@@ -178,5 +178,5 @@ func SaveDiff(srcScan, tgtScan []Scan) error {
 			[]string{s.Database, s.Table, s.PKColumn, s.PKType, s.Max, s.Count, s.Duration, t.Count, t.Duration, equal},
 		)
 	}
-	return storage.WriteToExcel(storage.Filename, storage.DiffSheet, columns, data)
+	return storage.WriteToExcel(saveFile, storage.DiffSheet, columns, data)
 }

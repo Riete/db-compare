@@ -53,7 +53,7 @@ on tb.table_schema = tbpri.table_schema and tb.table_name = tbpri.table_name ord
 	return table, nil
 }
 
-func (pk PK) Save() error {
+func (pk PK) Save(saveFile string) error {
 	var data [][]string
 	columns := []string{"database", "table", "pk_column", "pk_type"}
 	for _, database := range pk.Databases {
@@ -61,7 +61,7 @@ func (pk PK) Save() error {
 			data = append(data, []string{database.Name, table.Name, table.PKColumn, table.PKType})
 		}
 	}
-	return storage.WriteToExcel(storage.Filename, storage.PKSheet, columns, data)
+	return storage.WriteToExcel(saveFile, storage.PKSheet, columns, data)
 }
 
 func (pk *PK) Parse() error {

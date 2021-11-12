@@ -34,24 +34,24 @@ func run(pk mysql.PK, ms mysql.MySql, pkScan bool) []scan.Scan {
 	return sr
 }
 
-func fullCheck(pk mysql.PK, src, tgt mysql.MySql, pkScan bool) {
+func fullCheck(pk mysql.PK, src, tgt mysql.MySql, saveFile string, pkScan bool) {
 	srcScan := run(pk, src, pkScan)
 	tgtScan := run(pk, tgt, pkScan)
-	if err := scan.SaveFull(srcScan, tgtScan); err != nil {
+	if err := scan.SaveFull(srcScan, tgtScan, saveFile); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func diffCheck(src, tgt mysql.MySql, pkScan bool) {
-	srcScan, err := scan.LoadAndScan(src, pkScan)
+func diffCheck(src, tgt mysql.MySql, saveFile string, pkScan bool) {
+	srcScan, err := scan.LoadAndScan(src, saveFile, pkScan)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	tgtScan, err := scan.LoadAndScan(tgt, pkScan)
+	tgtScan, err := scan.LoadAndScan(tgt, saveFile, pkScan)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := scan.SaveDiff(srcScan, tgtScan); err != nil {
+	if err := scan.SaveDiff(srcScan, tgtScan, saveFile); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -61,9 +61,10 @@ func main() {
 	target := flag.String("target", "", "host:port:username:password")
 	fullScan := flag.Bool("full-scan", false, "full scan, default false")
 	pkScan := flag.Bool("pk-scan", false, "only scan table with pk, default false")
+	saveFile := flag.String("save-file", "scan.xlsx", "xlsx filename for save scan result")
 	flag.Parse()
-	if *source == "" || *target == "" {
-		panic(errors.New("source and target is required"))
+	if *source == "" || *target == "" || *saveFile == "" {
+		panic(errors.New("source, target and save-file is required"))
 	}
 	src := strings.Split(*source, ":")
 	tgt := strings.Split(*target, ":")
@@ -75,12 +76,12 @@ func main() {
 	if err := pk.Parse(); err != nil {
 		log.Fatalln(err)
 	}
-	if err := pk.Save(); err != nil {
+	if err := pk.Save(*saveFile); err != nil {
 		log.Fatalln(err)
 	}
 	if *fullScan {
-		fullCheck(pk, srcMysql, tgtMysql, *pkScan)
+		fullCheck(pk, srcMysql, tgtMysql, *saveFile, *pkScan)
 	} else {
-		diffCheck(srcMysql, tgtMysql, *pkScan)
+		diffCheck(srcMysql, tgtMysql, *saveFile, *pkScan)
 	}
 }
