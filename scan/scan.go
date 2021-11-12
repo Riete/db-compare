@@ -25,7 +25,7 @@ type Scan struct {
 func (s *Scan) getMinMax() error {
 	rows, _, err := s.Mysql.Query(
 		s.Database,
-		fmt.Sprintf("select ifnull(min(%s),0), ifnull(max(%s),0) from `%s`", s.PKColumn, s.PKColumn, s.Table),
+		fmt.Sprintf("select ifnull(min(`%s`),0), ifnull(max(`%s`),0) from `%s`", s.PKColumn, s.PKColumn, s.Table),
 	)
 	if err != nil {
 		return err
