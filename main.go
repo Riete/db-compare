@@ -12,7 +12,7 @@ import (
 	"github.com/riete/db-compare/mysql"
 )
 
-func run(pk mysql.PK, ms mysql.MySql) []scan.Scan {
+func run(pk mysql.PK, ms mysql.MySql, pkScan bool) []scan.Scan {
 	var sr []scan.Scan
 	for _, database := range pk.Databases {
 		for _, table := range database.Tables {
@@ -24,7 +24,7 @@ func run(pk mysql.PK, ms mysql.MySql) []scan.Scan {
 				PKColumn: table.PKColumn,
 				PKType:   table.PKType,
 			}
-			if err := s.GetCount(); err != nil {
+			if err := s.GetCount(pkScan); err != nil {
 				log.Fatalln(err)
 			}
 			log.Println(fmt.Sprintf("full scan %s %s %s done", ms.Host, database.Name, table.Name))
@@ -34,20 +34,20 @@ func run(pk mysql.PK, ms mysql.MySql) []scan.Scan {
 	return sr
 }
 
-func fullCheck(pk mysql.PK, src, tgt mysql.MySql) {
-	srcScan := run(pk, src)
-	tgtScan := run(pk, tgt)
+func fullCheck(pk mysql.PK, src, tgt mysql.MySql, pkScan bool) {
+	srcScan := run(pk, src, pkScan)
+	tgtScan := run(pk, tgt, pkScan)
 	if err := scan.SaveFull(srcScan, tgtScan); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func diffCheck(src, tgt mysql.MySql) {
-	srcScan, err := scan.LoadAndScan(src)
+func diffCheck(src, tgt mysql.MySql, pkScan bool) {
+	srcScan, err := scan.LoadAndScan(src, pkScan)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	tgtScan, err := scan.LoadAndScan(tgt)
+	tgtScan, err := scan.LoadAndScan(tgt, pkScan)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -60,6 +60,7 @@ func main() {
 	source := flag.String("source", "", "host:port:username:password")
 	target := flag.String("target", "", "host:port:username:password")
 	fullScan := flag.Bool("full-scan", false, "full scan, default false")
+	pkScan := flag.Bool("pk-scan", false, "only scan table with pk, default false")
 	flag.Parse()
 	if *source == "" || *target == "" {
 		panic(errors.New("source and target is required"))
@@ -78,8 +79,8 @@ func main() {
 		log.Fatalln(err)
 	}
 	if *fullScan {
-		fullCheck(pk, srcMysql, tgtMysql)
+		fullCheck(pk, srcMysql, tgtMysql, *pkScan)
 	} else {
-		diffCheck(srcMysql, tgtMysql)
+		diffCheck(srcMysql, tgtMysql, *pkScan)
 	}
 }

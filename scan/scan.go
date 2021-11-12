@@ -98,23 +98,25 @@ func (s *Scan) countWithoutPK() error {
 	return nil
 }
 
-func (s *Scan) GetCount() error {
+func (s *Scan) GetCount(pkScan bool) error {
 	if s.HasPK {
 		return s.countWithPK()
-	} else {
+	} else if !pkScan {
 		return s.countWithoutPK()
 	}
+	return nil
 }
 
-func (s *Scan) GetDiff() error {
+func (s *Scan) GetDiff(pkScan bool) error {
 	if s.HasPK {
 		return s.diff()
-	} else {
+	} else if !pkScan {
 		return s.countWithoutPK()
 	}
+	return nil
 }
 
-func LoadAndScan(ms mysql.MySql) ([]Scan, error) {
+func LoadAndScan(ms mysql.MySql, pkScan bool) ([]Scan, error) {
 	var scans []Scan
 	_, results, err := storage.ReadFromExcel(storage.Filename, storage.CountSheet)
 	if err != nil {
@@ -134,7 +136,7 @@ func LoadAndScan(ms mysql.MySql) ([]Scan, error) {
 			PKType:   r[3],
 			Max:      r[5],
 		}
-		if err := s.GetDiff(); err != nil {
+		if err := s.GetDiff(pkScan); err != nil {
 			return nil, err
 		}
 		log.Println(fmt.Sprintf("diff scan %s %s %s done", ms.Host, s.Database, s.Table))
